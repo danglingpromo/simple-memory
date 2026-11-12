@@ -24,6 +24,7 @@ from .compaction import (
     apply_decisions,
 )
 from .review import Reviewer, default_reviewer, keep_all
+from .llm_review import LLMReviewer, LLMConfig
 from .watcher import Watcher
 
 __all__ = [
@@ -38,5 +39,7 @@ __all__ = [
     "Reviewer",
     "default_reviewer",
     "keep_all",
+    "LLMReviewer",
+    "LLMConfig",
     "Watcher",
 ]

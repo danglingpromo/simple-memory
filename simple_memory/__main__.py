@@ -8,7 +8,14 @@ from pathlib import Path
 
 from .config import CompactionConfig, DEFAULT_IDLE_PAUSE_MINUTES
 from .review import default_reviewer
+from .llm_review import LLMReviewer, LLMConfig
 from .watcher import Watcher
+
+
+def _make_reviewer(name: str):
+    if name == "llm":
+        return LLMReviewer([], LLMConfig.from_env())
+    return default_reviewer
 
 
 def main(argv=None):
@@ -18,11 +25,13 @@ def main(argv=None):
     parser.add_argument("--state-dir", default=str(Path.home() / ".local" / "state" / "simple-memory"))
     parser.add_argument("--idle", type=int, default=DEFAULT_IDLE_PAUSE_MINUTES)
     parser.add_argument("--interval", type=int, default=60, help="poll seconds")
+    parser.add_argument("--reviewer", choices=["keep", "llm"], default="keep",
+                        help="keep = safe no-op; llm = judge significance via proxy")
     parser.add_argument("--once", action="store_true", help="evaluate a single tick and exit")
     args = parser.parse_args(argv)
 
     config = CompactionConfig(idle_pause_minutes=args.idle)
-    watcher = Watcher(args.kb, default_reviewer, config, args.input_marker, args.state_dir)
+    watcher = Watcher(args.kb, _make_reviewer(args.reviewer), config, args.input_marker, args.state_dir)
 
     if args.once:
         result = watcher.tick(datetime.now(timezone.utc))
