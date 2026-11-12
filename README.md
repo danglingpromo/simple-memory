@@ -50,16 +50,26 @@ graph LR
   T[Age / idle time] -.only triggers the review.-> Q
 ```
 
-## Default reviewer
+## Reviewers
 
-Without an LLM wired in, `default_reviewer = keep_all` — safe, nothing is
-dropped. Plug in an LLM-backed reviewer later to actually judge low-value notes.
+- `keep` (default): `default_reviewer = keep_all` — safe, nothing is dropped.
+- `llm`: `LLMReviewer` posts the manifest to an OpenAI-compatible endpoint
+  (default: the bigUnsloth proxy `http://127.0.0.1:8787/v1`, model
+  `unsloth/Qwen3.8-Flash-Next-GGUF`) and asks it to judge each note. If the
+  proxy is unreachable or returns unparseable output it falls back to keep-all,
+  so a bad model never corrupts the KB.
+
+Override with `SIMPLE_MEMORY_BASE_URL`, `SIMPLE_MEMORY_MODEL`,
+`SIMPLE_MEMORY_TIMEOUT`, `UNSLOTH_PROXY_API_KEY`.
 
 ## Run it
 
 ```sh
-# one evaluation
+# one evaluation (safe reviewer)
 python -m simple_memory --input-marker ~/.local/share/last-user-input --once
+
+# one evaluation using the LLM reviewer
+python -m simple_memory --input-marker ~/.local/share/last-user-input --once --reviewer llm
 
 # continuous watcher (poll every 60s)
 python -m simple_memory --input-marker ~/.local/share/last-user-input
